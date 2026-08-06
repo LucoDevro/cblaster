@@ -60,18 +60,20 @@ def efetch_request(ids: List[str]) -> http.client.HTTPResponse:
     """
     try:
         handle = Entrez.efetch("ipg", retmode="xml", id=ids, retmax=10000)
+        LOG.debug(handle.url)
         if handle.code != 200:
             raise RuntimeError(f"Bad response from NCBI while fetching IPG [code {handle.code}]")
-        tree = ET.parse(handle)
-        root = tree.getroot()
+        xml_data = handle.read()
         handle.close()
+        # tree = ET.parse(handle)
+        root = ET.fromstring(xml_data)
         return root.findall("IPGReport")
     except (IOError, RuntimeError):
         LOG.exception("Network error while retrieving genomic context")
         raise
     
 
-@batch_function(batch_size=1000)
+@batch_function(batch_size=100, delay=0.4)
 def efetch_IPG_table(ids):
     return efetch_request(ids)
 
