@@ -10,7 +10,7 @@ from collections import defaultdict
 
 import numpy as np
 import scipy
-from scipy.cluster.hierarchy import linkage
+from scipy.cluster.hierarchy import linkage, fcluster
 
 from cblaster.classes import Session
 from cblaster.helpers import get_project_root
@@ -52,6 +52,11 @@ def generate_linkage_matrix(array):
     array = np.array(array)
     array = array / np.max(array)
     return linkage(array, "ward")
+
+
+def generate_flat_clusters(linkage_matrix, threshold):
+    """Generates flat clusters from a linkage matrix using a given threshold."""
+    return fcluster(linkage_matrix, threshold, criterion="distance")
 
 
 def get_cell(query, cluster, cluster_id):
@@ -187,7 +192,8 @@ def get_data(session, sort_clusters=False, max_clusters=None):
         "counts": counts,
         "matrix": matrix,
         "hierarchy": hierarchy,
-        "sort_clusters": sort_clusters
+        "sort_clusters": sort_clusters,
+        "clustering": generate_flat_clusters(linkage_matrix, 0.9) if len(matrix) > 1 else []
     }
 
 
